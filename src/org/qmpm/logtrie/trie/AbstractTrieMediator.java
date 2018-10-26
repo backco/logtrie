@@ -1,3 +1,26 @@
+/*
+ * 	LogTrie - an efficient data structure and CLI for XES event logs and other sequential data
+ * 
+ * 	Author: Christoffer Olling Back	<www.christofferback.com>
+ * 
+ * 	Copyright (C) 2018 University of Copenhagen 
+ * 
+ *	This file is part of LogTrie.
+ *
+ *	LogTrie is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *
+ *	LogTrie is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with LogTrie.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package org.qmpm.logtrie.trie;
 
 import java.io.File;
@@ -5,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.qmpm.logtrie.core.Framework;
 import org.qmpm.logtrie.elementlabel.ElementLabel;
@@ -27,6 +52,8 @@ import org.qmpm.logtrie.trie.Trie.Node;
 import org.qmpm.logtrie.ui.ProgObsThread;
 import org.qmpm.logtrie.ui.ProgressObserver;
 
+import com.google.common.collect.Lists;
+
 public abstract class AbstractTrieMediator {
 	
 	private class LoadFile {}
@@ -44,7 +71,7 @@ public abstract class AbstractTrieMediator {
 		String name;
 		Trie trie;
 		
-		TrieAttributes(Trie t, Collection<? extends List<? extends Object>> c, String n, FileInfo f) {
+		public TrieAttributes(Trie t, Collection<? extends List<? extends Object>> c, String n, FileInfo f) {
 			trie = t; collection = c; name = n; file = f;
 		}
 		
@@ -99,6 +126,8 @@ public abstract class AbstractTrieMediator {
 	protected List<Trie> tries = new ArrayList<>();
 	private Map<MetricLabel, List<List<String>>> metrics = new HashMap<>();
 	private boolean flatten = false;
+	private boolean verbose = false;
+	private int partitionLog = 1;
 	
 	public abstract TrieAttributes getTrieAttributes(Trie t);
 	protected abstract void setTrieAttributes(Trie t, TrieAttributes ta);
@@ -107,10 +136,31 @@ public abstract class AbstractTrieMediator {
 	protected abstract String getLastMetric();
 	
 	public void addFile(FileInfo fi) throws LabelTypeException {
-	
-		File f = fi.getFile();	
-		filePathTrie.insert(pathAsRevList(f), false);
-		files.add(fi);
+		
+		File f = fi.getFile();
+		List<String> pathAsList = pathAsRevList(f);
+		
+		if (partitionLog > 1) {
+			
+			int k = 1;
+			
+			for (FileInfo fiPart : FileInfoFactory.partition(fi, partitionLog)) {
+				
+				fiPart.setID(" - " + String.valueOf(k++) + "/" + partitionLog);
+				
+				List<String> pathAsListK = new ArrayList<>();
+				pathAsListK.addAll(pathAsList);
+				pathAsListK.set(0, pathAsListK.get(0) + fiPart.getID());
+				filePathTrie.insert(pathAsListK, false);
+				files.add(fiPart);
+			}
+		} else {
+			
+			System.out.println("not partitioning log (" + partitionLog + ")");
+			
+			filePathTrie.insert(pathAsRevList(f), false);	
+			files.add(fi);
+		}
 	}
 	
 	public void addFile(String path) throws LabelTypeException {
@@ -147,7 +197,12 @@ public abstract class AbstractTrieMediator {
 		buildTrie(t, flatten, null, null);
 	}
 	
+
 	public void buildTrie(Trie t, boolean flatten, Integer current, Integer total) {
+		
+		if (verbose) {
+			System.out.println("Building trie for: " + getTrieAttributes(t).name);
+		}
 		
 		Collection<? extends List<? extends Object>> col = getTrieAttributes(t).collection;
 
@@ -177,6 +232,8 @@ public abstract class AbstractTrieMediator {
 		progThread.start();
 		
 		for (List<? extends Object> sequence : col) {
+			
+			if (verbose) System.out.println("inserting sequence " + (counter+1) + " of " + col.size());
 			
 			try {
 				t.insert(sequence, flatten);
@@ -224,6 +281,10 @@ public abstract class AbstractTrieMediator {
 	}
 	
 	public void buildTries(boolean flatten) {
+		
+		if (verbose) {
+			System.out.println("Building tries...");
+		}
 		
 		int current = 1;
 		int total = tries.size();
@@ -284,6 +345,7 @@ public abstract class AbstractTrieMediator {
 					//progThread.setBarWidth(mLen-2);
 					progThread.setCurrent(counter);
 					progThread.setTotal(tries.size());
+					
 					progThread.setPreLabel(String.format(preLabelFormat, ta.getName(), m.toString()));
 					progThread.start();
 					
@@ -328,19 +390,20 @@ public abstract class AbstractTrieMediator {
 		
 		String result = "";
 		Node n = filePathTrie.getRoot();
+		FileInfo fi = getTrieAttributes(t).file;
 		
-		for (String s : pathAsRevList(getTrieAttributes(t).file.getFile())) {
+		for (String s : pathAsRevList(fi.getFile())) {
 		
 			ElementLabel l = null;
 			
 			try {
-				l = LabelFactory.build(s);
+				l = LabelFactory.build( s.equals(fi.getFile().getName()) ? fi.getName() : s);
 			} catch (LabelTypeException e1) {
 				e1.printStackTrace();
 			}
 			
 			n = n.getChildren().get(l);
-			result = File.separator + s + result;
+			result = File.separator + l.toString() + result;
 
 			if (n.getVisits() < 2) break;
 		}
@@ -355,6 +418,11 @@ public abstract class AbstractTrieMediator {
 		}
 	}
 	
+	public List<FileInfo> getFiles() {
+		
+		return files;
+	}
+
 	public List<Trie> getTries() {
 		return tries;
 	}
@@ -519,10 +587,16 @@ public abstract class AbstractTrieMediator {
 	
 	public void removeMetrics(String labelClassName) {
 		
+		Set<MetricLabel> toRemove = new HashSet<MetricLabel>();
+		
 		for (MetricLabel m : metrics.keySet()) {
 			if (m.getClass().getSimpleName().equals(labelClassName)) {
-				metrics.remove(m);
+				toRemove.add(m);
 			}
+		}
+		
+		for (MetricLabel m : toRemove) {
+			metrics.remove(m);
 		}
 	}
 
@@ -541,6 +615,12 @@ public abstract class AbstractTrieMediator {
 	public void showTime(boolean b) {
 		showTime = b;
 	}
+
+	public void setVerbose(boolean b) {
+		
+		verbose = b;
+	}
+
 
 	public void updateAllMetrics() {
 		
@@ -573,5 +653,9 @@ public abstract class AbstractTrieMediator {
 		
 	public void setFlatten(boolean b) {
 		flatten = b;
+	}
+
+	public void setPartition(int k) {
+		partitionLog = Math.abs(k);
 	}
 }

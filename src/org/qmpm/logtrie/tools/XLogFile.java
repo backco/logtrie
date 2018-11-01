@@ -27,15 +27,19 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.deckfour.xes.factory.XFactory;
+import org.deckfour.xes.factory.XFactoryBufferedImpl;
+import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.model.XLog;
+import org.deckfour.xes.model.XTrace;
 import org.qmpm.logtrie.exceptions.FileLoadException;
 
-public class XLogFile implements FileInfo {
+public class XLogFile implements FileInfo<XLog> {
 
 	private File file;
-	private String path;
+	private String ID = "";
 	private XLog log = null;
-	private String ID = "";;
+	private String path;;
 	
 	public XLogFile(String filePath) {
 		
@@ -43,43 +47,25 @@ public class XLogFile implements FileInfo {
 		path = filePath;
 	}
 	
-	@Override
-	public File getFile() {
-		return file;
-	}
-
-
-	public String getPath() {
-		return path;
-	}
-	
-	public void loadFile() {
+	public void append(FileInfo<XLog> fi2) {
 		
-		try {
-			log = XESTools.loadXES(path);
-		} catch (FileLoadException e) {
-			e.printStackTrace();
+		XLog loadedFile = (XLog) fi2.getLoadedFile();
+		
+		for (XTrace trace : loadedFile) {
+			log.add(trace);
 		}
 	}
 
-	@Override
-	public Collection<? extends List<? extends Object>> getLoadedFile() {
+	public FileInfo<XLog> clone() {
 		
-		if (log == null) loadFile();
-		return log;
-	}
-	
-	public void setLoadedFile(Collection<? extends List<? extends Object>> loadedFile) throws Exception {
+		XLogFile result = new XLogFile(path);
 		
-		if (loadedFile instanceof XLog) {
-			log = (XLog) loadedFile;
-		} else throw new Exception("setLoadedFile: bad parameter type (" + loadedFile.getClass().toGenericString() + ")");
+		result.file = new File(file.getAbsolutePath());
+		result.log = log;
+
+		return result;
 	}
-	
-	public boolean fileLoaded() {
-		return (log != null);
-	}
-	
+
 	public void cutDownFile(int n, int m) {
 		
 		XLog newLog = (XLog) log.clone();
@@ -90,18 +76,47 @@ public class XLogFile implements FileInfo {
 		}
 		log = newLog;
 	}
+	
+	public boolean fileLoaded() {
+		return (log != null);
+	}
 
-	public FileInfo clone() {
+	@Override
+	public File getFile() {
+		return file;
+	}
+	
+	@Override
+	public String getID() {
+		return ID;
+	}
+	
+	@Override
+	public XLog getLoadedFile() {
 		
-		XLogFile result = new XLogFile(path);
-		
-		result.file = new File(file.getAbsolutePath());
-		result.log = log;
+		if (log == null) loadFile();
+		return log;
+	}
+	
+	@Override
+	public String getName() {
+		return file.getName() + getID();
+	}
 
-		return result;
+	public String getPath() {
+		return path;
 	}
 	
 	
+	public void loadFile() {
+		
+		try {
+			log = XESTools.loadXES(path);
+		} catch (FileLoadException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public boolean rename(String newPath) {
 		
 		return file.renameTo(new File(newPath));
@@ -111,13 +126,19 @@ public class XLogFile implements FileInfo {
 		this.ID = ID;
 	}
 
-	@Override
-	public String getID() {
-		return ID;
+	public void setLoadedFile(Collection<? extends List<? extends Object>> loadedFile) throws Exception {
+		
+		if (loadedFile instanceof XLog) {
+			log = (XLog) loadedFile;
+		} else throw new Exception("setLoadedFile: bad parameter type (" + loadedFile.getClass().toGenericString() + ")");
 	}
 
 	@Override
-	public String getName() {
-		return file.getName() + getID();
+	public FileInfo shallowCopy() {
+		XLogFile result = new XLogFile(path);
+		result.setID(ID);
+		result.log = new XFactoryBufferedImpl().createLog();
+		
+		return result;
 	}
 }

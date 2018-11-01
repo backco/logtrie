@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.qmpm.logtrie.elementlabel.ElementLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
+import org.qmpm.logtrie.exceptions.ProcessTransitionException;
 
 public interface Trie {
 	
@@ -62,7 +63,7 @@ public interface Trie {
 	 
 	 void addNode(Node n);
 	 List<Node> cloneNodes(List<Node> original);
-	 Node createNode(ElementLabel edgeLabel, Node parent);
+	 Node createNode(ElementLabel edgeLabel, Node parent) throws Exception;
 	 String draw();
 	 Object getAttribute(String key);
 	 Set<ElementLabel> getElementLabels();
@@ -77,7 +78,7 @@ public interface Trie {
 	 List<ElementLabel> getVisitingPrefix(Node node);
 	 boolean hasAttribute(String key);
 	 void incrementSize();
-	 Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException;
+	 Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException,ProcessTransitionException;
 	 void kill();	
 	 double medianBranchLength();
 	 List<List<ElementLabel>> rebuildSequences();

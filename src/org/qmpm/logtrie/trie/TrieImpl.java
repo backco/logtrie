@@ -38,6 +38,7 @@ import org.qmpm.logtrie.elementlabel.ElementLabel;
 import org.qmpm.logtrie.elementlabel.LabelFactory;
 import org.qmpm.logtrie.elementlabel.StringLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
+import org.qmpm.logtrie.exceptions.ProcessTransitionException;
 
 import com.google.common.collect.HashBiMap;
 
@@ -81,7 +82,7 @@ public class TrieImpl implements Trie {
 		return clone;
 	}
 	
-	public Node createNode(ElementLabel label, Node parent) {
+	public Node createNode(ElementLabel label, Node parent) throws Exception {
 		return new NodeImpl(label, parent, this);
 	}
 
@@ -268,7 +269,6 @@ public class TrieImpl implements Trie {
 			ElementLabel label = null;
 			label = LabelFactory.build(sequence.get(i));
 			
-			
 			elementLabels.add(label);
 			Node node;
 
@@ -286,7 +286,12 @@ public class TrieImpl implements Trie {
 					}
 				}
 			} else {
-				node = createNode(label, lastNode);
+				try {
+					node = createNode(label, lastNode);
+				} catch (Exception e) {
+					remove(lastNode);
+					return null;
+				}
 				node.getParent().setIsLeaf(false);
 				Integer breadth = 1;
 
@@ -356,7 +361,7 @@ public class TrieImpl implements Trie {
     public void remove(Node endNode) {
     	
     	Node lastNode = endNode;
-    	boolean finished = false;
+    	boolean finished = endNode.getIsRoot();
     	
     	while (!finished) {
 

@@ -41,6 +41,7 @@ public abstract class Metric {
 	private Outcome outcome = Outcome.CONTINUE;
 	private int sigDigs = 8;
 	private MetricLabel label;
+	private String[] args = null;
 	
 	public abstract Outcome doComputation(Trie t) throws LabelTypeException, NodeTypeException;
 	public abstract void processArgs(String[] args); // add throws for bad arg input
@@ -54,6 +55,7 @@ public abstract class Metric {
 	public Metric(String[] args) {
 		
 		label = getLabel();
+		this.args = args;
 		processArgs(args);
 	}
 	
@@ -161,5 +163,13 @@ public abstract class Metric {
 	public String toString() {
 		String p = parametersAsString();
 		return label.shortDescription() + (p == "" ? "" : " (" + p + ")");
+	}
+	
+	public void setArgs(String[] args) {
+		this.args = args;
+	}
+	
+	public String[] getArgs() {
+		return args;
 	}
 }

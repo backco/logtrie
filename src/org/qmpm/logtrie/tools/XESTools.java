@@ -24,6 +24,9 @@
 package org.qmpm.logtrie.tools;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import org.deckfour.xes.in.XesXmlGZIPParser;
@@ -33,6 +36,7 @@ import org.deckfour.xes.model.XAttributeMap;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.out.XesXmlSerializer;
 import org.qmpm.logtrie.core.Framework;
 import org.qmpm.logtrie.exceptions.FileLoadException;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
@@ -155,6 +159,16 @@ public class XESTools {
 		
 		return traceAsString;
 	}
+	
+	public static String xTraceID(XTrace trace) throws LabelTypeException {
+		
+		XAttributeMap xaMap = trace.getAttributes();
+
+		if (xaMap.containsKey("concept:name")) {
+			XAttribute xa = xaMap.get("concept:name");
+			return xa.toString();
+		} else throw new LabelTypeException("ERROR: (cannot find 'concept:name' entry for XEvent");
+	}
 
 	// TODO: Improve XEvent parsing
 	public static String xEventName(XEvent event) throws LabelTypeException {
@@ -165,5 +179,18 @@ public class XESTools {
 			XAttribute xa = xaMap.get("concept:name");
 			return xa.toString();
 		} else throw new LabelTypeException("ERROR: (cannot find 'concept:name' entry for XEvent");
+	}
+	
+	public static void saveFile(XLog log, String path) throws FileNotFoundException, IOException {
+		
+		File f = new File(path);
+		XesXmlSerializer xesSerial = new XesXmlSerializer();
+		xesSerial.serialize(log, new FileOutputStream(f));
+	}
+	
+	public static void saveFile(XLog log, File file) throws FileNotFoundException, IOException {
+		
+		XesXmlSerializer xesSerial = new XesXmlSerializer();
+		xesSerial.serialize(log, new FileOutputStream(file));
 	}
 }

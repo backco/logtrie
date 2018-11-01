@@ -27,16 +27,18 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-public interface FileInfo {
+public interface FileInfo<T extends Collection<? extends List<? extends Object>>> {
 	
+	public void append(FileInfo<T> fi2);
 	public File getFile();
 	public Collection<? extends List<? extends Object>> getLoadedFile();
 	public void setLoadedFile(Collection<? extends List<? extends Object>> loadedFile) throws Exception; 
 	public boolean fileLoaded();
 	public void cutDownFile(int i, int j);
-	public FileInfo clone();
+	public FileInfo<T> clone();
 	public boolean rename(String newPath);
 	public String getID();
 	public void setID(String ID);
 	public String getName();
+	public FileInfo shallowCopy();
 }

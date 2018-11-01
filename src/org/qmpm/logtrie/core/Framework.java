@@ -44,6 +44,7 @@ public class Framework {
 	protected static AbstractTrieMediator trieMediator;
 	protected static CommandLine cmd;
 	private static boolean quiet = false;
+	private static boolean verbose = false;
 	
 	public static void run(CLI cli, String[] args, AbstractTrieMediator tm) {
 		
@@ -68,7 +69,7 @@ public class Framework {
 		
 		addFiles(cmd.getArgList());
 		
-		setQuiet(true);
+		if (!verbose) setQuiet(true);
 		
 		trieMediator.run();
 	}
@@ -171,5 +172,10 @@ public class Framework {
 	public static void setFlatten(boolean b) {
 		
 		trieMediator.setFlatten(b);
+	}
+	
+	public static void setVerbose(boolean b) {
+		
+		trieMediator.setVerbose(b);
 	}
 }

@@ -46,10 +46,10 @@ public class TrieImpl implements Trie {
 	
 	final static ElementLabel ROOT_ACTIVITY = new StringLabel("N/A");
 	final static String ROOT_NAME = "root";
+	private int attemptedInsertions = 0;
 	private HashBiMap<String, String> activityAbbrevMap = HashBiMap.create();
 	private Map<String, Object> attributes = new HashMap<>();
 	private Map<Integer, Integer> breadthMap = new HashMap<>();
-	private Collection<? extends List<? extends Object>> collection = null;
 	private Set<ElementLabel> elementLabels = new HashSet<>();
 	private List<Node> endNodeSet = new ArrayList<>();
 	private int longestBranch = 0;
@@ -57,16 +57,22 @@ public class TrieImpl implements Trie {
 	protected Node root;
 	private final Node ROOT_PARENT = null;
 	private int size = 0;
+	private Trie associatedTrie = null; 
 	
 	public TrieImpl() {
 		setRoot(ROOT_ACTIVITY, ROOT_NAME, ROOT_PARENT);
 	}
 
-	public TrieImpl(Collection<? extends List<? extends Object>> collection) {
-		this();
-		this.collection = collection;
+	public void addElementLabel(Object s) throws LabelTypeException {
+		elementLabels.add(LabelFactory.build(s));
 	}
 
+	public void addElementLabels(Set<? extends Object> s) throws LabelTypeException {
+		for (Object l : s) {
+			elementLabels.add(LabelFactory.build(l));
+		}
+	}
+	
 	public void addNode(Node node) {
 		this.nodeSet.add(node);
 	}
@@ -120,12 +126,18 @@ public class TrieImpl implements Trie {
 		return this.attributes.get(key);
 	}
 
-	public Collection<? extends List<? extends Object>> getCollection() {
-		return collection;
+	@Override
+	public int getAttemptedInsertions() {
+		
+		return attemptedInsertions;
 	}
 	
 	@Override
-	public Set<ElementLabel> getElementLabels() {
+	public Set<ElementLabel> getElementLabels() throws Exception {
+		
+		if (elementLabels.isEmpty()) {
+			throw new Exception("Prefix tree is empty. It has probably not been built yet.");
+		}
 		return elementLabels;
 	}
 	
@@ -260,6 +272,7 @@ public class TrieImpl implements Trie {
 
 	public Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException {
 		
+		attemptedInsertions++;		
 		Node lastNode = this.getRoot();
 		Map<ElementLabel, ? extends Node> children = this.getRoot().getChildren();
 		lastNode.incrementVisits();
@@ -268,8 +281,8 @@ public class TrieImpl implements Trie {
 			
 			ElementLabel label = null;
 			label = LabelFactory.build(sequence.get(i));
+			addElementLabel(label);
 			
-			elementLabels.add(label);
 			Node node;
 
 			if (children.containsKey(label)) {
@@ -341,12 +354,15 @@ public class TrieImpl implements Trie {
     	this.activityAbbrevMap.put("act" + this.activityAbbrevMap.size(), activity);
     }
     
-	public List<List<ElementLabel>> rebuildSequences() {
+	public List<List<ElementLabel>> rebuildSequences(boolean flatten) {
 		
 		List<List<ElementLabel>> retSeqs = new ArrayList<>();
 		
 		for (Node endNode : this.getEndNodeSet()) {
-			retSeqs.add(getVisitingPrefix(endNode));
+			List<ElementLabel> seq = getVisitingPrefix(endNode);
+			for (int i=0; i<(flatten ? 1 : endNode.getEndVisits()); i++) {
+				retSeqs.add(seq);
+			}
 		}
 		
 		return retSeqs;
@@ -397,6 +413,7 @@ public class TrieImpl implements Trie {
                 node = children.get(label);
                 children = node.getChildren();
             } else {
+            	System.out.println("Could not find " + label + " in children: " + children.keySet());
                 return null;
             }
         }
@@ -454,4 +471,16 @@ public class TrieImpl implements Trie {
 
     	return output;
     }
+
+	@Override
+	public void setAssociatedTrie(Trie t) {
+
+		associatedTrie = t;
+	}
+
+	@Override
+	public Trie getAssociatedTrie() {
+
+		return associatedTrie;
+	}
 }

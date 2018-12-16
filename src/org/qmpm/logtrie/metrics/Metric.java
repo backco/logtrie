@@ -23,8 +23,11 @@
 
 package org.qmpm.logtrie.metrics;
 
+import java.util.Comparator;
+
 import org.qmpm.logtrie.enums.MetricLabel;
 import org.qmpm.logtrie.enums.Outcome;
+import org.qmpm.logtrie.exceptions.FileLoadException;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
 import org.qmpm.logtrie.exceptions.NodeTypeException;
 import org.qmpm.logtrie.tools.MathTools;
@@ -37,13 +40,13 @@ public abstract class Metric {
 	protected Double value = null;
 	protected long startTime = 0;
 	public long timeout = Long.MAX_VALUE; // Measured in nanoseconds. Will run for 292 years by default.
-	protected String result = Outcome.DEFAULT.toString();
+	private String result = Outcome.DEFAULT.toString();
 	private Outcome outcome = Outcome.CONTINUE;
-	private int sigDigs = 8;
+	protected int sigDigs = -1;
 	private MetricLabel label;
 	private String[] args = null;
 	
-	public abstract Outcome doComputation(Trie t) throws LabelTypeException, NodeTypeException;
+	protected abstract Outcome doComputation(Trie t) throws LabelTypeException, NodeTypeException, FileLoadException;
 	public abstract void processArgs(String[] args); // add throws for bad arg input
 	public abstract MetricLabel getLabel();
 	public abstract String parametersAsString();
@@ -63,9 +66,12 @@ public abstract class Metric {
 		return value;
 	}
 	
+/*
 	public Double formattedValue() {
+		
 		return MathTools.round(getValue(), sigDigs);
 	}
+*/
 	
 	public void registerProgObs(ProgressObserver po) {
 
@@ -114,15 +120,19 @@ public abstract class Metric {
 			outcome = Outcome.ERROR;
 			e.printStackTrace();
 			System.exit(1);
+		} catch (FileLoadException e) {
+			outcome = Outcome.ERROR;
+			e.printStackTrace();
+			System.exit(1);
 		}
 		
 		finished();
 		
 		switch(outcome) {
-		case SUCCESS:	setResult(value == null ? Outcome.SUCCESS.toString() : formattedValue().toString());	break;
+		case SUCCESS:	setResult(value == null ? Outcome.SUCCESS.toString() : String.format("%." + (sigDigs<0 ? 0 : sigDigs) + "f", value));	break;
 		case TIMEOUT:	setResult(Outcome.TIMEOUT.toString()); break;
 		case ERROR:		setResult(Outcome.ERROR.toString()); break;
-		default: result = "UNHANDLED"; break;
+		default: System.out.println("Outcome: " + outcome + " is unhandled");result = "UNHANDLED"; break;
 		}
 	}
 	
@@ -138,13 +148,18 @@ public abstract class Metric {
 		return result;
 	}
 	
+	public int getSigDigs() {
+		return sigDigs;
+	}
+	
 	public void setTimeout(long nanoSeconds) {
 		timeout = nanoSeconds;
 		progObs.setTimeout(this, timeout);
 	}
 	
 	public void setSigDigits(int significantDigits) {
-		sigDigs = significantDigits;
+		
+		if (sigDigs < 0)	sigDigs = significantDigits; // allows inherited classes to enforce immutable significant digit value
 	}
 
 	public void setOutcome(Outcome o) {
@@ -172,4 +187,5 @@ public abstract class Metric {
 	public String[] getArgs() {
 		return args;
 	}
+
 }

@@ -31,12 +31,13 @@ public class ProgObsThread extends Thread {
 	private Object obj;
 	private ProgressObserver progObs;
 	private String preLabel = "";
-	private String label = "";
+	private String endLabel = "";
 	private Integer total = 0;
 	private Integer current = 0;
 	//private int barWidth = 40;
 	private long timeElapsed = 0;
 	private boolean showProgress = false;
+	private boolean labelChange = false;
 	
 	public ProgObsThread(ProgressObserver po, Object o, boolean showProgress) {
 		
@@ -68,14 +69,18 @@ public class ProgObsThread extends Thread {
 			String printFile = String.format(formatFile, current, total);
 			String printTime = TimeTools.nanoToHourMinSecMilli(elapsed);
 			
-			String out = "\r" + preLabel + " [" + printPercent + " % ]  [" + printTime + "] " + printFile + label;
+			if (labelChange && showProgress) {
+				System.out.print("\r" + new String(new char[clrLen]).replace('\0', ' '));
+				labelChange = false;
+			}
+			String out = "\r" + preLabel + " [" + printPercent + " % ]  [" + printTime + "] " + printFile + " - " + endLabel;
 			
 			if (showProgress)	System.out.print(out);
 			
-			clrLen = out.length();
+			clrLen = out.length()+20;
 			
 			try {
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -97,12 +102,14 @@ public class ProgObsThread extends Thread {
 		return timeElapsed;
 	}
 	
-	public void setLabel(String s) {
-		label = s;
+	public void setEndLabel(String s) {
+		endLabel = s;
+		labelChange = true;
 	}
 
 	public void setPreLabel(String s) {
 		preLabel = s;
+		labelChange = true;
 	}
 	
 	public void setCurrent(int c) {

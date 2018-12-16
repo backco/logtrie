@@ -24,6 +24,8 @@
 package org.qmpm.logtrie.tools;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,5 +42,8 @@ public interface FileInfo<T extends Collection<? extends List<? extends Object>>
 	public String getID();
 	public void setID(String ID);
 	public String getName();
-	public FileInfo shallowCopy();
+	public void saveAs(String path) throws FileNotFoundException, IOException;
+	public void shuffle();
+	public void sort();
+	public boolean isSorted();
 }

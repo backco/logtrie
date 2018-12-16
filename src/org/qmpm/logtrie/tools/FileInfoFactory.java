@@ -30,15 +30,16 @@ import java.util.List;
 public class FileInfoFactory {
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends Collection<? extends List<? extends Object>>> FileInfo<T> build(String path) {
+	public static <T extends Collection<? extends List<? extends Object>>> FileInfo<T> build(String path, boolean createFile) {
 		
 		if (path.toLowerCase().endsWith("xes")) {
-			return (FileInfo<T>) new XLogFile(path);
+			return (FileInfo<T>) new XLogFile(path, createFile);
 		}
 		
 		return null;
 	}
 
+	/*
 	public static <T extends Collection<? extends List<? extends Object>>> FileInfo<T> combine(List<FileInfo<T>> fiList) {
 		
 		System.out.println("In FileInfoFactory.combine()");
@@ -57,12 +58,11 @@ public class FileInfoFactory {
 		System.out.println("result.size(): " + result.getLoadedFile().size());
 		return result;
 	}
+*/
 	
 	public static <T extends Collection<? extends List<? extends Object>>> List<FileInfo<T>> partition(FileInfo<T> fi, int k) {
 		
 		List<FileInfo<T>> result = new ArrayList<FileInfo<T>>();
-		
-		System.out.println("In FileInfoFactory.partition(): fi.getLoadedFile().size(): " + fi.getLoadedFile().size());
 		
 		int i = Math.floorDiv(fi.getLoadedFile().size(), k);
 		int r = fi.getLoadedFile().size() % k;
@@ -71,9 +71,7 @@ public class FileInfoFactory {
 			
 			FileInfo<T> filePart = fi.clone();
 						
-			System.out.println("In FileInfoFactory.partition(): trying to make partition from indices: " + (j * i + shift) + " to " + (j * i + i + (r > 0 ? 1 : 0) + shift));		
 			filePart.cutDownFile(j * i + shift, (j * i + i + (r > 0 ? 1 : 0) + shift));
-			System.out.println("filePart.size(): " + filePart.getLoadedFile().size());
 			shift += r > 0 ? 1 : 0;
 			r--;
 			result.add(filePart);

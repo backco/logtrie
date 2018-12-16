@@ -27,7 +27,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.deckfour.xes.in.XesXmlGZIPParser;
 import org.deckfour.xes.in.XesXmlParser;
@@ -43,7 +53,7 @@ import org.qmpm.logtrie.exceptions.LabelTypeException;
 
 public class XESTools {
 
-	public static XLog loadXES(String logPath) throws FileLoadException{
+	public static XLog loadXES(String logPath, boolean sortByTimeStamp) throws FileLoadException{
 		
 		File f = new File(logPath);
 
@@ -53,7 +63,14 @@ public class XESTools {
 			
 				if (canParse(logPath)) {
 				
-					XLog log = load(logPath).get(0); 
+					XLog log = load(logPath).get(0);
+					
+					/*
+					if (sortByTimeStamp) {
+						sortByTimeStamp(log);
+					}
+					*/
+					
 					return log;
 
 				} else throw new FileLoadException("ERROR: (cannot parse file!): " + logPath);
@@ -63,7 +80,7 @@ public class XESTools {
 		} else throw new FileLoadException("ERROR: (not a file!): " + logPath); 
 	}
 	
-	public static List<XLog> load(String path) {
+	private static List<XLog> load(String path) {
 		
 		File file = read(path);
 		List<XLog> xLogs = null;
@@ -167,7 +184,7 @@ public class XESTools {
 		if (xaMap.containsKey("concept:name")) {
 			XAttribute xa = xaMap.get("concept:name");
 			return xa.toString();
-		} else throw new LabelTypeException("ERROR: (cannot find 'concept:name' entry for XEvent");
+		} else throw new LabelTypeException("ERROR: (cannot find 'concept:name' entry for XTrace");
 	}
 
 	// TODO: Improve XEvent parsing
@@ -181,16 +198,93 @@ public class XESTools {
 		} else throw new LabelTypeException("ERROR: (cannot find 'concept:name' entry for XEvent");
 	}
 	
+	public static String xTraceTimeStamp(XTrace trace) throws LabelTypeException {
+		
+		XAttributeMap xaMap = trace.get(0).getAttributes();
+
+		if (xaMap.containsKey("time:timestamp")) {
+			XAttribute xa = xaMap.get("time:timestamp");
+			return xa.toString();
+		} else throw new LabelTypeException("ERROR: (cannot find 'time:timestamp' entry for XEvent");
+	}
+
+	
 	public static void saveFile(XLog log, String path) throws FileNotFoundException, IOException {
 		
 		File f = new File(path);
+		
+		f.getParentFile().mkdirs();
+		f.createNewFile();
+		
 		XesXmlSerializer xesSerial = new XesXmlSerializer();
 		xesSerial.serialize(log, new FileOutputStream(f));
 	}
 	
-	public static void saveFile(XLog log, File file) throws FileNotFoundException, IOException {
+	public static void saveFile(XLog log, File f) throws FileNotFoundException, IOException {
+		
+		f.getParentFile().mkdirs();
+		f.createNewFile();
 		
 		XesXmlSerializer xesSerial = new XesXmlSerializer();
-		xesSerial.serialize(log, new FileOutputStream(file));
+		xesSerial.serialize(log, new FileOutputStream(f));
+	}
+	
+	public static boolean isSorted(XTrace t) {
+		
+		for (int i=0; i<t.size()-1; i++) {
+			if (0 < LocalDateTime.parse(t.get(i).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME).compareTo(
+					LocalDateTime.parse(t.get(i+1).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME))) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public static boolean isSorted(XLog l) {
+		
+		for (XTrace t : l) {
+			if (!isSorted(t)) {
+				return false;
+			}
+		}
+
+		for (int i=0; i<l.size()-1; i++) {
+			if (0 < LocalDateTime.parse(l.get(i).get(0).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME).compareTo(
+					LocalDateTime.parse(l.get(i+1).get(0).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME))) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public static void sortByTimeStamp (XTrace t) {
+		
+		t.sort((x,y) ->(LocalDateTime.parse( ((XEvent) x).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME).compareTo(
+						LocalDateTime.parse( ((XEvent) y).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME))));
+	}
+	
+	public static void sortByTimeStamp (XLog l) {
+		
+		for (XTrace t : l) {
+			sortByTimeStamp(t);
+		}
+		
+		l.sort((x,y) ->(LocalDateTime.parse( ((XTrace) x).get(0).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME).compareTo(
+						LocalDateTime.parse( ((XTrace) y).get(0).getAttributes().get("time:timestamp").toString(),  DateTimeFormatter.ISO_OFFSET_DATE_TIME))));
+	}
+	
+	public static Set<String> getAllActivities(XLog l) {
+		
+		Set<String> result = new HashSet<>();
+		
+		for (XTrace t : l) {
+			for (XEvent e : t) {
+				result.add(e.getAttributes().get("concept:name").toString());
+			}
+		}
+		
+		return result;
 	}
 }

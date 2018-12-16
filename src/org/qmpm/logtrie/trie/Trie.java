@@ -65,8 +65,9 @@ public interface Trie {
 	 List<Node> cloneNodes(List<Node> original);
 	 Node createNode(ElementLabel edgeLabel, Node parent) throws Exception;
 	 String draw();
+	 int getAttemptedInsertions();
 	 Object getAttribute(String key);
-	 Set<ElementLabel> getElementLabels();
+	 Set<ElementLabel> getElementLabels() throws Exception;
 	 List<Node> getEndNodeSet();
 	 Set<Node> getLeafNodeSet();
 	 int getLongestBranch();
@@ -81,7 +82,7 @@ public interface Trie {
 	 Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException,ProcessTransitionException;
 	 void kill();	
 	 double medianBranchLength();
-	 List<List<ElementLabel>> rebuildSequences();
+	 List<List<ElementLabel>> rebuildSequences(boolean flatten);
 	 void remove(List<Object> sequence) throws LabelTypeException;
 	 void remove(Node endNode);
 	 Node search(List<Object> sequence) throws LabelTypeException;
@@ -89,4 +90,8 @@ public interface Trie {
      void setLongestBranch(int length);
 	 void setRoot(ElementLabel rootActivity, String rootName, Node rootParent);
 	 String toString();
+	 void setAssociatedTrie(Trie t);
+	 Trie getAssociatedTrie();
+	 <T extends Object> void addElementLabel(T l) throws LabelTypeException;
+	 void addElementLabels(Set<? extends Object> s) throws LabelTypeException;
 }

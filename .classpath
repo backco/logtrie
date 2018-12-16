@@ -46,7 +46,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/OpenXES-20180810.jar"/>
+	<classpathentry kind="lib" path="lib/OpenXES-20180810.jar" sourcepath="/OpenXES-20180810"/>
 	<classpathentry kind="lib" path="lib/OpenXES-XStream-20180810.jar"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>

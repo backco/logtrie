@@ -67,17 +67,15 @@ public class Framework {
 			}
 		}
 		
-		addFiles(cmd.getArgList());
-		
 		if (!verbose) setQuiet(true);
+		
+		addFiles(cmd.getArgList());
 		
 		trieMediator.run();
 	}
 
 	protected static void addFiles(List<String> files) {
 
-		System.out.println("Adding files...");
-		
 		try {
 			trieMediator.addFiles(files);
 		} catch (Exception e) {
@@ -156,18 +154,6 @@ public class Framework {
 			System.out.println("Unexpected value for significant digits option: " + Arrays.toString(args)+ ". Using default.");
 		}
 	}
-
-	public static void setPartition(Option o) {
-		
-		String[] args = cmd.getOptionValues(o.getLongOpt());
-		
-		try {
-			int k = Integer.parseInt(args[0]);
-			trieMediator.setPartition(k);
-		} catch (NumberFormatException e) {
-			System.out.println("Unexpected value for partition option: " + Arrays.toString(args)+ ". Using default.");
-		}
-	}
 	
 	public static void setFlatten(boolean b) {
 		
@@ -175,7 +161,8 @@ public class Framework {
 	}
 	
 	public static void setVerbose(boolean b) {
-		
+		verbose = b;
 		trieMediator.setVerbose(b);
+		System.out.println("Framework.setVerbose(" + b + ")...verbose: " + verbose);
 	}
 }

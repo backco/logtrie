@@ -217,7 +217,6 @@ public class MathTools {
 	}
 
 	// ENTROPY & INFORMATION THEORY
-	// TODO: Strictly speaking, this should be labeled "information" of "self-information", not entropy.
 	public static double information(double p) throws ValueOutOfBoundsException {
 		
 		double result = 0.0;

@@ -53,8 +53,6 @@ public class ProgressObserver {
 	}
 	
 	public void register(Object o) {
-		System.err.println("ProgressObserver.register()");
-		System.err.println("   registering: " + o.getClass().getSimpleName() + "(" + o.hashCode() + ")");
 		progMap.put(o,  0.0);
 		finishedMap.put(o, false);
 	}
@@ -85,7 +83,6 @@ public class ProgressObserver {
 	public boolean timeout(Object o) {
 
 		if (timeOutMap.containsKey(o)) {
-		
 			long elapsed = System.nanoTime() - timeStartMap.get(o);
 			return (timeOutMap.get(o) - elapsed < 0);
 			

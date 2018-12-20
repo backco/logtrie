@@ -23,22 +23,36 @@
 
 package org.qmpm.logtrie.elementlabel;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.deckfour.xes.model.XEvent;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
+import org.qmpm.logtrie.tools.XESTools;
 
-public class LabelFactory {
+public final class LabelFactory {
 
+	/*
 	public static <T> ElementLabel build(T element) throws LabelTypeException {
+		return build(element, null);
+	}
+	*/
+	
+	public static <S> ElementLabel build(Object element, Map<String, S> encodingScheme) throws LabelTypeException {
 		if (element instanceof ElementLabel) {
 			
 			return (ElementLabel) element;
 		
-		} else if (element instanceof XEvent) {
+		} 
+		/*
+		else if (element instanceof XEvent) {
 		
 			return new XEventStrLbl((XEvent) element);
 		
-		} else if (element instanceof String) {
+		}
+		*/ 
+		else if (element instanceof String) {
 			return new StringLabel((String) element);
 		
 		} else if (element instanceof Transition) {
@@ -46,6 +60,14 @@ public class LabelFactory {
 			// TODO: Disentangle this
 			return new PNTransitionLabel((Transition) element);
 		
+		} else if (element instanceof XEvent) {
+			
+			if (encodingScheme == null) return new XEventStrLbl((XEvent) element);
+ 			
+			String name = XESTools.xEventName((XEvent) element);
+			
+			return new XEventIntLbl<S>((XEvent) element, encodingScheme.get(name));			
+			
 		} else {
 			
 			throw new LabelTypeException("ERROR: Element of type " + element.getClass().getName() + " cannot be converted to an ElementLabel");

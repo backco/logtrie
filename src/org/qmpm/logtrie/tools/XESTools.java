@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,6 +40,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.io.output.NullOutputStream;
 import org.deckfour.xes.in.XesXmlGZIPParser;
 import org.deckfour.xes.in.XesXmlParser;
 import org.deckfour.xes.model.XAttribute;
@@ -80,7 +82,11 @@ public class XESTools {
 		} else throw new FileLoadException("ERROR: (not a file!): " + logPath); 
 	}
 	
-	private static List<XLog> load(String path) {
+	private static List<XLog> load(String path) throws FileLoadException {
+		
+		PrintStream ps = System.out;
+		System.setOut(new PrintStream(new NullOutputStream()));
+		System.setErr(new PrintStream(new NullOutputStream()));
 		
 		File file = read(path);
 		List<XLog> xLogs = null;
@@ -95,7 +101,10 @@ public class XESTools {
 		
 			xLogs = parse(file, xesXmlGZIPParser);
 		
-		} else System.err.println("File format can't be parsed!");
+		} else throw new FileLoadException("File format can't be parsed!");
+		
+		System.setOut(ps);
+		System.setErr(ps);
 		
 		return xLogs;
 	}

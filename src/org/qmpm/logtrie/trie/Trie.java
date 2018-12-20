@@ -31,7 +31,7 @@ import org.qmpm.logtrie.elementlabel.ElementLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
 import org.qmpm.logtrie.exceptions.ProcessTransitionException;
 
-public interface Trie {
+public interface Trie<S> {
 	
 	interface Node {
 		
@@ -90,8 +90,10 @@ public interface Trie {
      void setLongestBranch(int length);
 	 void setRoot(ElementLabel rootActivity, String rootName, Node rootParent);
 	 String toString();
-	 void setAssociatedTrie(Trie t);
-	 Trie getAssociatedTrie();
+	 void setAssociatedTrie(Trie<?> t);
+	 Trie<?> getAssociatedTrie();
 	 <T extends Object> void addElementLabel(T l) throws LabelTypeException;
 	 void addElementLabels(Set<? extends Object> s) throws LabelTypeException;
+	 Map<String, S> getEncodingScheme();
+	 void setEncodingScheme(Map<String, S> encScheme);
 }

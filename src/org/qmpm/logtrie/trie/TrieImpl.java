@@ -38,11 +38,11 @@ import org.qmpm.logtrie.elementlabel.ElementLabel;
 import org.qmpm.logtrie.elementlabel.LabelFactory;
 import org.qmpm.logtrie.elementlabel.StringLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
-import org.qmpm.logtrie.exceptions.ProcessTransitionException;
+//import org.qmpm.logtrie.exceptions.ProcessTransitionException;
 
 import com.google.common.collect.HashBiMap;
 
-public class TrieImpl implements Trie {
+public class TrieImpl<S> implements Trie<S> {
 	
 	final static ElementLabel ROOT_ACTIVITY = new StringLabel("N/A");
 	final static String ROOT_NAME = "root";
@@ -57,19 +57,20 @@ public class TrieImpl implements Trie {
 	protected Node root;
 	private final Node ROOT_PARENT = null;
 	private int size = 0;
-	private Trie associatedTrie = null; 
+	private Trie<?> associatedTrie = null; 
+	protected Map<String, S> encodingScheme = null;
 	
 	public TrieImpl() {
 		setRoot(ROOT_ACTIVITY, ROOT_NAME, ROOT_PARENT);
 	}
 
-	public void addElementLabel(Object s) throws LabelTypeException {
-		elementLabels.add(LabelFactory.build(s));
+	public <T> void addElementLabel(T s) throws LabelTypeException {
+		elementLabels.add(LabelFactory.build(s, encodingScheme));
 	}
 
 	public void addElementLabels(Set<? extends Object> s) throws LabelTypeException {
 		for (Object l : s) {
-			elementLabels.add(LabelFactory.build(l));
+			elementLabels.add(LabelFactory.build(l, encodingScheme));
 		}
 	}
 	
@@ -92,7 +93,6 @@ public class TrieImpl implements Trie {
 		return new NodeImpl(label, parent, this);
 	}
 
-	@Override
 	public String draw() {
 		
 		String out = "";
@@ -126,13 +126,11 @@ public class TrieImpl implements Trie {
 		return this.attributes.get(key);
 	}
 
-	@Override
 	public int getAttemptedInsertions() {
 		
 		return attemptedInsertions;
 	}
 	
-	@Override
 	public Set<ElementLabel> getElementLabels() throws Exception {
 		
 		if (elementLabels.isEmpty()) {
@@ -280,7 +278,7 @@ public class TrieImpl implements Trie {
 		for (int i=0; i<sequence.size(); i++) {
 			
 			ElementLabel label = null;
-			label = LabelFactory.build(sequence.get(i));
+			label = LabelFactory.build(sequence.get(i), encodingScheme);
 			addElementLabel(label);
 			
 			Node node;
@@ -398,7 +396,7 @@ public class TrieImpl implements Trie {
     	}
     }
 
-	public Node search(List<Object> sequence) throws LabelTypeException{
+    public Node search(List<Object> sequence) throws LabelTypeException{
     	
 		Node root = getRoot();
         Map<ElementLabel, ? extends Node> children = root.getChildren(); 
@@ -407,7 +405,7 @@ public class TrieImpl implements Trie {
         for(int i=0; i<sequence.size(); i++){
         	
         	ElementLabel label = null;
-       		label = LabelFactory.build(sequence.get(i));
+       		label = LabelFactory.build(sequence.get(i), encodingScheme);
 
        		if(children.containsKey(label)){
                 node = children.get(label);
@@ -473,14 +471,24 @@ public class TrieImpl implements Trie {
     }
 
 	@Override
-	public void setAssociatedTrie(Trie t) {
+	public void setAssociatedTrie(Trie<?> t) {
 
 		associatedTrie = t;
 	}
 
-	@Override
-	public Trie getAssociatedTrie() {
+	public Trie<?> getAssociatedTrie() {
 
 		return associatedTrie;
 	}
+
+	@Override
+	public Map<String, S> getEncodingScheme() {
+		return encodingScheme;
+	}
+
+	@Override
+	public void setEncodingScheme(Map<String, S> encScheme) {
+		encodingScheme = encScheme;
+	}
+
 }

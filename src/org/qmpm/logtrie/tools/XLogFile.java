@@ -122,7 +122,6 @@ public class XLogFile implements FileInfo<XLog> {
 		if (log == null) {
 		
 			try {
-				System.out.println("XLogFile()...Trying to load file: " + path);
 				log = XESTools.loadXES(path, true);
 			} catch (FileLoadException e) {
 				

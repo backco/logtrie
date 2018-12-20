@@ -46,7 +46,7 @@ public abstract class Metric {
 	private MetricLabel label;
 	private String[] args = null;
 	
-	protected abstract Outcome doComputation(Trie t) throws LabelTypeException, NodeTypeException, FileLoadException;
+	protected abstract <S> Outcome doComputation(Trie<S> t) throws LabelTypeException, NodeTypeException, FileLoadException;
 	public abstract void processArgs(String[] args); // add throws for bad arg input
 	public abstract MetricLabel getLabel();
 	public abstract String parametersAsString();

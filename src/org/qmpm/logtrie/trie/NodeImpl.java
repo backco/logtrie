@@ -46,7 +46,7 @@ public class NodeImpl implements Node {
 	private String name = "";
 	protected Node parent = null;
 	
-	protected NodeImpl(ElementLabel parentEdgeLabel, Node parent, Trie trie) {
+	protected NodeImpl(ElementLabel parentEdgeLabel, Node parent, Trie<?> trie) {
 		
 		this.parentEdgeLabel = parentEdgeLabel;
 		

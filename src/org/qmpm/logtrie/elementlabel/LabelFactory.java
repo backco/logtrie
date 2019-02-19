@@ -23,7 +23,6 @@
 
 package org.qmpm.logtrie.elementlabel;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.deckfour.xes.model.XEvent;

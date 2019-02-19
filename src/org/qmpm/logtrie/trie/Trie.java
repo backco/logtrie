@@ -29,9 +29,10 @@ import java.util.Set;
 
 import org.qmpm.logtrie.elementlabel.ElementLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
+import org.qmpm.logtrie.exceptions.NodeNotFoundException;
 import org.qmpm.logtrie.exceptions.ProcessTransitionException;
 
-public interface Trie<S> {
+public interface Trie {
 	
 	interface Node {
 		
@@ -79,21 +80,21 @@ public interface Trie<S> {
 	 List<ElementLabel> getVisitingPrefix(Node node);
 	 boolean hasAttribute(String key);
 	 void incrementSize();
-	 Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException,ProcessTransitionException;
+	 Node insert(List<?> sequence, boolean flatten) throws LabelTypeException,ProcessTransitionException;
 	 void kill();	
 	 double medianBranchLength();
 	 List<List<ElementLabel>> rebuildSequences(boolean flatten);
-	 void remove(List<Object> sequence) throws LabelTypeException;
+	 void remove(List<?> sequence) throws LabelTypeException, NodeNotFoundException;
 	 void remove(Node endNode);
-	 Node search(List<Object> sequence) throws LabelTypeException;
+	 Node search(List<?> sequence) throws LabelTypeException, NodeNotFoundException;
      <V> void setAttribute(String key, V value);
      void setLongestBranch(int length);
 	 void setRoot(ElementLabel rootActivity, String rootName, Node rootParent);
 	 String toString();
-	 void setAssociatedTrie(Trie<?> t);
-	 Trie<?> getAssociatedTrie();
+	 void setAssociatedTrie(Trie t);
+	 Trie getAssociatedTrie();
 	 <T extends Object> void addElementLabel(T l) throws LabelTypeException;
-	 void addElementLabels(Set<? extends Object> s) throws LabelTypeException;
-	 Map<String, S> getEncodingScheme();
-	 void setEncodingScheme(Map<String, S> encScheme);
+	 void addElementLabels(Set<?> s) throws LabelTypeException;
+	 Map<String, ?> getEncodingScheme();
+	 void setEncodingScheme(Map<String, ?> encScheme);
 }

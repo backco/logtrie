@@ -172,7 +172,7 @@ public class MathTools {
 	}
 	
 	// SET OPERATIONS
-	public static Set<? super Object> complement(Collection<? extends Object> colA, Collection<? extends Object> colB) {
+	public static Set<? super Object> complement(Collection<?> colA, Collection<?> colB) {
 		
 		Set<? super Object> complement = new HashSet<>();
 		
@@ -182,7 +182,7 @@ public class MathTools {
 		return complement;
 	}
 	
-	public static Set<? super Object> intersection(Collection<? extends Object> colA, Collection<? extends Object> colB) {
+	public static Set<? super Object> intersection(Collection<?> colA, Collection<?> colB) {
 		
 		Set<? super Object> intersection = new HashSet<>();
 		
@@ -195,7 +195,7 @@ public class MathTools {
 		return intersection;
 	}
 	
-	public static Set<? super Object> union(Collection<? extends Object> colA, Collection<? extends Object> colB) {
+	public static Set<? super Object> union(Collection<?> colA, Collection<?> colB) {
 		
 		Set<? super Object> union = new HashSet<>();
 		

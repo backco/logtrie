@@ -39,12 +39,13 @@ import org.qmpm.logtrie.elementlabel.LabelFactory;
 import org.qmpm.logtrie.elementlabel.StringLabel;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
 //import org.qmpm.logtrie.exceptions.ProcessTransitionException;
+import org.qmpm.logtrie.exceptions.NodeNotFoundException;
 
 import com.google.common.collect.HashBiMap;
 
-public class TrieImpl<S> implements Trie<S> {
+public class TrieImpl implements Trie {
 	
-	final static ElementLabel ROOT_ACTIVITY = new StringLabel("N/A");
+	final static ElementLabel ROOT_ACTIVITY = new StringLabel("ROOT");
 	final static String ROOT_NAME = "root";
 	private int attemptedInsertions = 0;
 	private HashBiMap<String, String> activityAbbrevMap = HashBiMap.create();
@@ -57,18 +58,18 @@ public class TrieImpl<S> implements Trie<S> {
 	protected Node root;
 	private final Node ROOT_PARENT = null;
 	private int size = 0;
-	private Trie<?> associatedTrie = null; 
-	protected Map<String, S> encodingScheme = null;
+	private Trie associatedTrie = null; 
+	protected Map<String, ?> encodingScheme = null;
 	
 	public TrieImpl() {
 		setRoot(ROOT_ACTIVITY, ROOT_NAME, ROOT_PARENT);
 	}
 
 	public <T> void addElementLabel(T s) throws LabelTypeException {
-		elementLabels.add(LabelFactory.build(s, encodingScheme));
+		elementLabels.add(LabelFactory.build(s, getEncodingScheme()));
 	}
 
-	public void addElementLabels(Set<? extends Object> s) throws LabelTypeException {
+	public void addElementLabels(Set<?> s) throws LabelTypeException {
 		for (Object l : s) {
 			elementLabels.add(LabelFactory.build(l, encodingScheme));
 		}
@@ -95,12 +96,18 @@ public class TrieImpl<S> implements Trie<S> {
 
 	public String draw() {
 		
+		System.out.println("Trie " + this.hashCode());
+		System.out.println("longestBranch: " + this.getLongestBranch());
 		String out = "";
 		List<Node> frontier = new ArrayList<>();
 		List<Node> newFrontier = new ArrayList<>();
 		frontier.add(this.getRoot());
 		
 		for (int i=0; i<this.getLongestBranch(); i++) {
+			
+			System.out.println("i: " + i);
+			
+			
 			out = i + ": ";
 			newFrontier.clear();
 		
@@ -268,15 +275,14 @@ public class TrieImpl<S> implements Trie<S> {
 		this.size++;
 	}
 
-	public Node insert(List<? extends Object> sequence, boolean flatten) throws LabelTypeException {
-		
+	public Node insert(List<?> sequence, boolean flatten) throws LabelTypeException {
 		attemptedInsertions++;		
 		Node lastNode = this.getRoot();
 		Map<ElementLabel, ? extends Node> children = this.getRoot().getChildren();
 		lastNode.incrementVisits();
 		
 		for (int i=0; i<sequence.size(); i++) {
-			
+
 			ElementLabel label = null;
 			label = LabelFactory.build(sequence.get(i), encodingScheme);
 			addElementLabel(label);
@@ -366,7 +372,7 @@ public class TrieImpl<S> implements Trie<S> {
 		return retSeqs;
 	}
 	
-    public void remove(List<Object> sequence) throws LabelTypeException {
+    public void remove(List<?> sequence) throws LabelTypeException, NodeNotFoundException {
 		
     	Node endNode = search(sequence);
 		remove(endNode);
@@ -396,7 +402,7 @@ public class TrieImpl<S> implements Trie<S> {
     	}
     }
 
-    public Node search(List<Object> sequence) throws LabelTypeException{
+    public Node search(List<?> sequence) throws LabelTypeException, NodeNotFoundException{
     	
 		Node root = getRoot();
         Map<ElementLabel, ? extends Node> children = root.getChildren(); 
@@ -411,8 +417,7 @@ public class TrieImpl<S> implements Trie<S> {
                 node = children.get(label);
                 children = node.getChildren();
             } else {
-            	System.out.println("Could not find " + label + " in children: " + children.keySet());
-                return null;
+            	throw new NodeNotFoundException("Could not find " + label + " in children: " + children.keySet());
             }
         }
         
@@ -437,57 +442,49 @@ public class TrieImpl<S> implements Trie<S> {
 	protected void toDoAtEndOfInsert(Node node) {
 	}
 
-	@Override
-    // Print out tree, depth-first
-    public String toString() {
-    	
-		Node root = getRoot();
-    	String output = "";
-    	int counter = 0;
-    	output += "Level: " + counter  + System.getProperty("line.separator");
-    	output += "Label: " + root.getParentEdgeLabel() + System.getProperty("line.separator");
-    	output += System.getProperty("line.separator");
-    	output += toString(root, output, counter+1);
-    	
-    	return output;
-    }
+
+	// Print out tree using depth-first search
+	private String toString(Node n, String prefix, boolean lastSibling) 
+	{		
+		StringBuilder subTree = new StringBuilder();		
+		subTree.append(System.lineSeparator() + prefix);
+		subTree.append(n.getIsRoot() ? "" : (lastSibling) ? "└── " : "├── ");
+		subTree.append(n.getParentEdgeLabel().toString() + " (" + n.getVisits() + ")");
+		prefix += (n.getIsRoot() ? "" : lastSibling ? "    " : "│   ");
+
+		int c = 1; 
+		for (ElementLabel childLabel : n.getChildEdgeLabels()) {
+			
+			Node child = n.getChildren().get(childLabel);
+			boolean isLast = (c++ == n.getChildEdgeLabels().size() ? true : false);
+			subTree.append(toString(child, prefix, isLast));
+		}
+		return subTree.toString();
+	}
 	
-	public String toString(Node node,  String outputIn,  int counterIn) {
-    	
-		String output = "";
-    	
-		for (Node childNode : node.getChildren().values()) {
-    		output += "Level	: " + counterIn + System.getProperty("line.separator");
-    		output += "Name		: " + childNode.getName() + System.getProperty("line.separator");
-    		output += "Visits	: " + childNode.getVisits() + System.getProperty("line.separator");
-    		output += "Parent	: " + childNode.getParent().getName() + System.getProperty("line.separator");
-    		output += "Label	: " + childNode.getParentEdgeLabel() + System.getProperty("line.separator");
-        	output += "Children	: " + childNode.getChildren().keySet() + System.getProperty("line.separator");
-        	output += System.getProperty("line.separator");
-        	output += toString(childNode, output, counterIn+1);
-        }
-
-    	return output;
-    }
+	@Override
+	public String toString() {
+		return toString(this.getRoot(),"", true);
+	}
 
 	@Override
-	public void setAssociatedTrie(Trie<?> t) {
+	public void setAssociatedTrie(Trie t) {
 
 		associatedTrie = t;
 	}
 
-	public Trie<?> getAssociatedTrie() {
+	public Trie getAssociatedTrie() {
 
 		return associatedTrie;
 	}
 
 	@Override
-	public Map<String, S> getEncodingScheme() {
+	public Map<String, ?> getEncodingScheme() {
 		return encodingScheme;
 	}
 
 	@Override
-	public void setEncodingScheme(Map<String, S> encScheme) {
+	public void setEncodingScheme(Map<String, ?> encScheme) {
 		encodingScheme = encScheme;
 	}
 

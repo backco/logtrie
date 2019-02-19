@@ -30,7 +30,7 @@ import java.util.List;
 public class FileInfoFactory {
 	
 	@SuppressWarnings("unchecked")
-	public static <T extends Collection<? extends List<? extends Object>>> FileInfo<T> build(String path, boolean createFile) {
+	public static <T extends Collection<? extends List<?>>> FileInfo<T> build(String path, boolean createFile) {
 		
 		if (path.toLowerCase().endsWith("xes")) {
 			return (FileInfo<T>) new XLogFile(path, createFile);
@@ -40,7 +40,7 @@ public class FileInfoFactory {
 	}
 
 	/*
-	public static <T extends Collection<? extends List<? extends Object>>> FileInfo<T> combine(List<FileInfo<T>> fiList) {
+	public static <T extends Collection<? extends List<?>>> FileInfo<T> combine(List<FileInfo<T>> fiList) {
 		
 		System.out.println("In FileInfoFactory.combine()");
 		System.out.println("fiList.size(): " + fiList.size());
@@ -60,7 +60,7 @@ public class FileInfoFactory {
 	}
 */
 	
-	public static <T extends Collection<? extends List<? extends Object>>> List<FileInfo<T>> partition(FileInfo<T> fi, int k) {
+	public static <T extends Collection<? extends List<?>>> List<FileInfo<T>> partition(FileInfo<T> fi, int k) {
 		
 		List<FileInfo<T>> result = new ArrayList<FileInfo<T>>();
 		

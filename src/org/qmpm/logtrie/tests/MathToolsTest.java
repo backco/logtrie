@@ -66,7 +66,7 @@ class MathToolsTest {
 	@Test
 	void testComplement() {
 		Set<Integer> inter1 = new HashSet<>(Arrays.asList(1,2,3));
-		Set<? extends Object> inter2 = new HashSet<>(Arrays.asList(4,5,6,7,8,9)); 
+		Set<?> inter2 = new HashSet<>(Arrays.asList(4,5,6,7,8,9)); 
 		assertEquals(inter1, MathTools.complement(set1, list2));
 		assertEquals(inter2, MathTools.complement(list2, set3));
 	}
@@ -74,7 +74,7 @@ class MathToolsTest {
 	@Test
 	void testIntersection() {
 		Set<Integer> inter1 = new HashSet<>(Arrays.asList(4,5,6,7)); 
-		Set<? extends Object> inter2 = new HashSet<>();
+		Set<?> inter2 = new HashSet<>();
 		assertEquals(inter1, MathTools.intersection(set1, list2));
 		assertEquals(inter2, MathTools.intersection(list2, set3));
 	}
@@ -82,7 +82,7 @@ class MathToolsTest {
 	@Test
 	void testUnion() {
 		Set<Integer> inter1 = new HashSet<>(Arrays.asList(1,2,3,4,5,6,7,8,9)); 
-		Set<? extends Object> inter2 = new HashSet<>(Arrays.asList(4,5,6,7,8,9,"a","b","c","d","e","f")); 
+		Set<?> inter2 = new HashSet<>(Arrays.asList(4,5,6,7,8,9,"a","b","c","d","e","f")); 
 		assertEquals(inter1, MathTools.union(set1, list2));
 		assertEquals(inter2, MathTools.union(list2, set3));
 	}

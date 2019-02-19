@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-public interface FileInfo<T extends Collection<? extends List<? extends Object>>> {
+public interface FileInfo<T extends Collection<? extends List<?>>> {
 	
 	public void append(FileInfo<T> fi2);
 	public File getFile();
-	public Collection<? extends List<? extends Object>> getLoadedFile();
-	public void setLoadedFile(Collection<? extends List<? extends Object>> loadedFile) throws Exception; 
+	public Collection<? extends List<?>> getLoadedFile();
+	public void setLoadedFile(Collection<? extends List<?>> loadedFile) throws Exception; 
 	public boolean fileLoaded();
 	public void cutDownFile(int i, int j);
 	public FileInfo<T> clone();

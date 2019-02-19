@@ -23,14 +23,11 @@
 
 package org.qmpm.logtrie.metrics;
 
-import java.util.Comparator;
-
 import org.qmpm.logtrie.enums.MetricLabel;
 import org.qmpm.logtrie.enums.Outcome;
 import org.qmpm.logtrie.exceptions.FileLoadException;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
 import org.qmpm.logtrie.exceptions.NodeTypeException;
-import org.qmpm.logtrie.tools.MathTools;
 import org.qmpm.logtrie.trie.Trie;
 import org.qmpm.logtrie.ui.ProgressObserver;
 
@@ -46,7 +43,7 @@ public abstract class Metric {
 	private MetricLabel label;
 	private String[] args = null;
 	
-	protected abstract <S> Outcome doComputation(Trie<S> t) throws LabelTypeException, NodeTypeException, FileLoadException;
+	protected abstract <S> Outcome doComputation(Trie t) throws LabelTypeException, NodeTypeException, FileLoadException;
 	public abstract void processArgs(String[] args); // add throws for bad arg input
 	public abstract MetricLabel getLabel();
 	public abstract String parametersAsString();

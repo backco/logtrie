@@ -25,7 +25,6 @@ package org.qmpm.logtrie.elementlabel;
 
 import org.deckfour.xes.model.XEvent;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
-import org.qmpm.logtrie.tools.XESTools;
 
 public class XEventIntLbl<S> extends ElementLabel {
 	

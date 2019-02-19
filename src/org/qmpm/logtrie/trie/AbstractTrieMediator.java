@@ -53,28 +53,26 @@ import org.qmpm.logtrie.trie.Trie.Node;
 import org.qmpm.logtrie.ui.ProgObsThread;
 import org.qmpm.logtrie.ui.ProgressObserver;
 
-import com.google.common.collect.Iterators;
-
 public abstract class AbstractTrieMediator {
 	
 	private class LoadFile {}
 	
 	// TODO: Separate output into own class
 	
-	public class TrieAttributes<T extends Collection<? extends List<? extends Object>>, S> {
+	public class TrieAttributes<T extends Collection<? extends List<?>>> {
 		
 		public static final String METRICS = "METRICS";
 		public String[] metricTypes = {METRICS};
 		public Outcome buildOutcome = Outcome.DEFAULT;
-		Collection<? extends List<? extends Object>> collection = null;
+		Collection<? extends List<?>> collection = null;
 		public FileInfo<T> file;
 		List<Metric> metrics = new ArrayList<>();
 		String name;
 		Trie trie;
 		String info = "";
-		Map<String, S> encodingScheme = new HashMap<>();
+		Map<String, ?> encodingScheme = new HashMap<>();
 		
-		public TrieAttributes(Trie t, Collection<? extends List<? extends Object>> c, String n, FileInfo<T> f) {
+		public TrieAttributes(Trie t, Collection<? extends List<?>> c, String n, FileInfo<T> f) {
 			trie = t; collection = c; name = n; file = f;
 		}
 		
@@ -140,29 +138,28 @@ public abstract class AbstractTrieMediator {
 	protected final String CVPARTITIONING = "CROSS-VALIDATION (partitioning log)...";
 	protected final String MINING = "MINING...";
 	protected String preLabel = "";
-	protected List<FileInfo<? extends Collection<? extends List<? extends Object>>>> files = new ArrayList<>();
-	protected Trie<String> filePathTrie = new TrieImpl<>();
+	protected List<FileInfo<? extends Collection<? extends List<?>>>> files = new ArrayList<>();
+	protected Trie filePathTrie = new TrieImpl();
 	protected ProgressObserver progObs = new ProgressObserver();
 	protected boolean showProgress = false;
 	private boolean showTime = false;
 	protected int sigDigs = 3;	
 	protected long timeout = Long.MAX_VALUE; // 292 years
-	protected List<Trie<?>> tries = new ArrayList<>();
+	protected List<Trie> tries = new ArrayList<>();
 	private Map<MetricLabel, List<List<String>>> metrics = new LinkedHashMap<>();
 	private boolean flatten = false;
 	protected boolean verbose = false;
-	protected List<Trie<?>> trieIterList = new ArrayList<>();
+	protected List<Trie> trieIterList = new ArrayList<>();
 	
-	public abstract <S> TrieAttributes<? extends Collection<? extends List<? extends Object>>, S> getTrieAttributes(Trie<S> t);
-	protected abstract <T extends Collection<? extends List<? extends Object>>, S> void setTrieAttributes(Trie<S> t, TrieAttributes<T, S> ta);
-	protected abstract <T extends Collection<? extends List<? extends Object>>, S> boolean beforeTrieBuild(ListIterator<Trie<?>> trieIterator, Trie<S> t, int current, int total, String labelFormat);
+	public abstract TrieAttributes<? extends Collection<? extends List<?>>> getTrieAttributes(Trie t);
+	protected abstract <T extends Collection<? extends List<?>>> void setTrieAttributes(Trie t, TrieAttributes<T> ta);
+	protected abstract <T extends Collection<? extends List<?>>> boolean beforeTrieBuild(ListIterator<Trie> trieIterator, Trie t, int current, int total, String labelFormat);
 	public abstract void setupTries();
 	protected abstract String getLastMetric();
 	protected abstract boolean needToBuildTries();
 	
-	public <T extends Collection<? extends List<? extends Object>>> void addFile(FileInfo<T> fi) throws LabelTypeException {
+	public <T extends Collection<? extends List<?>>> void addFile(FileInfo<T> fi) throws LabelTypeException {
 		
-		File f = fi.getFile();
 		// TODO: Move this to run(), build from a path saved in TrieAttributes 
 		/*
 		try {
@@ -175,13 +172,13 @@ public abstract class AbstractTrieMediator {
 		files.add(fi);
 	}
 	
-	public <T extends Collection<? extends List<? extends Object>>> void addFile(String path) throws LabelTypeException {
+	public <T extends Collection<? extends List<?>>> void addFile(String path) throws LabelTypeException {
 		
 		FileInfo<T> fi = FileInfoFactory.build(path, true);
 		addFile(fi);
 	}	
 	
-	public <T extends Collection<? extends List<? extends Object>>> void addFiles(List<String> paths) throws Exception {
+	public <T extends Collection<? extends List<?>>> void addFiles(List<String> paths) throws Exception {
 		
 		LoadFile placeHolder = new LoadFile();
 		progObs.register(placeHolder);
@@ -226,19 +223,19 @@ public abstract class AbstractTrieMediator {
 		metrics.put(m, argsList);
 	}
 	
-	public <S> void buildTrie(Trie<S> t, boolean flatten) {
+	public <S> void buildTrie(Trie t, boolean flatten) {
 		buildTrie(t, flatten, null, null);
 	}
 	
-	public <S> void buildTrie(Trie<S> t, boolean flatten, Integer current, Integer total) {
+	public void buildTrie(Trie t, boolean flatten, Integer current, Integer total) {
 		
-		TrieAttributes<? extends Collection<? extends List<? extends Object>>, S> ta = getTrieAttributes(t);
+		TrieAttributes<? extends Collection<? extends List<?>>> ta = getTrieAttributes(t);
 		
 		if (verbose) {
 			System.out.println("Building trie for: " + ta.name);
 		}
 		
-		Collection<? extends List<? extends Object>> col = ta.collection;
+		Collection<? extends List<?>> col = ta.collection;
 
 		if (col == null) {
 			
@@ -264,7 +261,7 @@ public abstract class AbstractTrieMediator {
 		progThread.setTotal(total);
 		progThread.start();
 		
-		for (List<? extends Object> sequence : col) {
+		for (List<?> sequence : col) {
 
 			if (verbose)
 					System.out.println("inserting sequence " + (counter+1) + " of " + col.size() + " in trie " + t.hashCode());
@@ -330,7 +327,7 @@ public abstract class AbstractTrieMediator {
 		
 		int current = 1;
 		int total = tries.size();
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			if (getTrieAttributes(t).buildOutcome == Outcome.DEFAULT) {
 				buildTrie(t, flatten, current++, total);
 			}
@@ -351,8 +348,8 @@ public abstract class AbstractTrieMediator {
 		int counter = 1;
 		//trieIterList.addAll(tries);
 			
-		ListIterator<Trie<?>> trieIterator = new ArrayList<Trie<?>>().listIterator();
-		for (Trie<?> s : tries) {
+		ListIterator<Trie> trieIterator = new ArrayList<Trie>().listIterator();
+		for (Trie s : tries) {
 			trieIterator.add(s);
 		}
 		
@@ -368,7 +365,7 @@ public abstract class AbstractTrieMediator {
 		System.out.println(showProgress ? "\r" + header : header);
 		Framework.resetQuiet();
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			
 			//System.out.println(trieIterator.hasNext());
 			
@@ -380,7 +377,7 @@ public abstract class AbstractTrieMediator {
 			
 			//System.out.println("trieIterator.previous(): " + t.hashCode());
 			
-			TrieAttributes<? extends Collection<? extends List<? extends Object>>, ? extends Object> ta = getTrieAttributes(t);
+			TrieAttributes<? extends Collection<? extends List<?>>> ta = getTrieAttributes(t);
 			
 			String[] resultSoFar = new String[metrics.keySet().size() + 1];
 			for (int i = 0; i<resultSoFar.length; i++) {	resultSoFar[i] = "";	}
@@ -459,7 +456,7 @@ public abstract class AbstractTrieMediator {
 
 	public void drawTries() {
 
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			t.draw();
 		}
 	}
@@ -467,15 +464,15 @@ public abstract class AbstractTrieMediator {
 	// TODO: find identical tries 
 	// 			- structurally isomorphic vs. label-identical
 	
-	public Collection<Collection<Trie<?>>> findDuplicateTries() {
+	public Collection<Collection<Trie>> findDuplicateTries() {
 		return null;
 	}
 
-	private <S> String formatName(Trie<S> t) {
+	private <S> String formatName(Trie t) {
 		
 		String result = "";
 		Node n = filePathTrie.getRoot();
-		FileInfo<? extends Collection<? extends List<? extends Object>>> fi = getTrieAttributes(t).file;
+		FileInfo<? extends Collection<? extends List<?>>> fi = getTrieAttributes(t).file;
 		
 		/*
 		List<String> pathRevList = new ArrayList<>();
@@ -508,7 +505,7 @@ public abstract class AbstractTrieMediator {
 
 	private void formatNames() {
 
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			try {
 				filePathTrie.insert(pathAsRevList(getTrieAttributes(t).getFile().getFile()), false);
 			} catch (LabelTypeException e) {
@@ -520,17 +517,17 @@ public abstract class AbstractTrieMediator {
 			}
 		}
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			getTrieAttributes(t).name = formatName(t);
 		}
 	}
 	
-	public List<FileInfo<? extends Collection<? extends List<? extends Object>>>> getFiles() {
+	public List<FileInfo<? extends Collection<? extends List<?>>>> getFiles() {
 		
 		return files;
 	}
 
-	public List<Trie<?>> getTries() {
+	public List<Trie> getTries() {
 		return tries;
 	}
 	
@@ -547,23 +544,23 @@ public abstract class AbstractTrieMediator {
 		return result;
 	}
 	
-	public <S> void loadFile(Trie<S> t) {
+	public <S> void loadFile(Trie t) {
 		
 		if ((getTrieAttributes(t).collection == null) && getTrieAttributes(t).buildOutcome == Outcome.DEFAULT) {
 		
-			TrieAttributes<? extends Collection<? extends List<? extends Object>>, S> ta = getTrieAttributes(t);
+			TrieAttributes<? extends Collection<? extends List<?>>> ta = getTrieAttributes(t);
 			getTrieAttributes(t).collection = ta.file.getLoadedFile();
 		}
 	}
 	
-	public <S> void loadFile(Trie<S> t, int num) {
+	public <S> void loadFile(Trie t, int num) {
 
 		loadFile(t, "", num);
 	}
 	
-	public <S> void loadFile(Trie<S> t, String preLabel, int num) {
+	public <S> void loadFile(Trie t, String preLabel, int num) {
 		
-		//TrieAttributes<? extends Collection<? extends List<? extends Object>>> ta = getTrieAttributes(t);
+		//TrieAttributes<? extends Collection<? extends List<?>>> ta = getTrieAttributes(t);
 		
 		if ((getTrieAttributes(t).collection == null) && getTrieAttributes(t).buildOutcome == Outcome.DEFAULT) {
 			
@@ -590,7 +587,7 @@ public abstract class AbstractTrieMediator {
 	
 	public void loadFiles() {
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			loadFile(t);
 		}
 	}
@@ -601,7 +598,7 @@ public abstract class AbstractTrieMediator {
 		
 		int max = 0;
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 		
 			int len = getTrieAttributes(t).getName().length();
 			
@@ -617,7 +614,7 @@ public abstract class AbstractTrieMediator {
 		
 		int max = 0;
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 		
 			int l = longestNameMetric(getTrieAttributes(t).getMetrics());
 			
@@ -688,7 +685,7 @@ public abstract class AbstractTrieMediator {
 		
 		System.err.println("ORIGINAL INPUT REBUILT FROM TRIE");
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 		
 			System.err.println("Name: " + getTrieAttributes(t).name);
 			List<List<ElementLabel>> seqs = t.rebuildSequences(false);
@@ -727,7 +724,7 @@ public abstract class AbstractTrieMediator {
 	}
 	
 	public void showTime(boolean b) {
-		showTime = b;
+		setShowTime(b);
 	}
 
 	public void setVerbose(boolean b) {
@@ -737,9 +734,9 @@ public abstract class AbstractTrieMediator {
 
 	public void updateAllMetrics() {
 		
-		for (Trie<?> t : tries) {
+		for (Trie t : tries) {
 			
-			TrieAttributes<? extends Collection<? extends List<? extends Object>>, ? extends Object> ta = getTrieAttributes(t);
+			TrieAttributes<? extends Collection<? extends List<?>>> ta = getTrieAttributes(t);
 
 			for (MetricLabel l : metrics.keySet()) {
 				
@@ -765,5 +762,17 @@ public abstract class AbstractTrieMediator {
 		
 	public void setFlatten(boolean b) {
 		flatten = b;
+	}
+	/**
+	 * @return the showTime
+	 */
+	public boolean isShowTime() {
+		return showTime;
+	}
+	/**
+	 * @param showTime the showTime to set
+	 */
+	public void setShowTime(boolean showTime) {
+		this.showTime = showTime;
 	}
 }

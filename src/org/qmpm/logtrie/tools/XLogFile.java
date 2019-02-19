@@ -32,14 +32,11 @@ import java.util.List;
 
 import org.deckfour.xes.factory.XFactory;
 import org.deckfour.xes.factory.XFactoryBufferedImpl;
-import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.qmpm.logtrie.core.Framework;
 import org.qmpm.logtrie.exceptions.FileLoadException;
 import org.qmpm.logtrie.exceptions.LabelTypeException;
-
-import com.google.common.io.Files;
 
 public class XLogFile implements FileInfo<XLog> {
 
@@ -178,7 +175,7 @@ public class XLogFile implements FileInfo<XLog> {
 		this.ID = ID;
 	}
 
-	public void setLoadedFile(Collection<? extends List<? extends Object>> loadedFile) throws Exception {
+	public void setLoadedFile(Collection<? extends List<?>> loadedFile) throws Exception {
 		
 		if (loadedFile instanceof XLog) {
 			log = (XLog) loadedFile;

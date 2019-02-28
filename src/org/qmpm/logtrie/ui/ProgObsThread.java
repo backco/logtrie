@@ -1,10 +1,10 @@
 /*
  * 	LogTrie - an efficient data structure and CLI for XES event logs and other sequential data
- * 
+ *
  * 	Author: Christoffer Olling Back	<www.christofferback.com>
- * 
- * 	Copyright (C) 2018 University of Copenhagen 
- * 
+ *
+ * 	Copyright (C) 2018 University of Copenhagen
+ *
  *	This file is part of LogTrie.
  *
  *	LogTrie is free software: you can redistribute it and/or modify
@@ -27,125 +27,132 @@ import org.qmpm.logtrie.core.Framework;
 import org.qmpm.logtrie.tools.TimeTools;
 
 public class ProgObsThread extends Thread {
-	
+
 	private Object obj;
 	private ProgressObserver progObs;
 	private String preLabel = "";
 	private String endLabel = "";
 	private Integer total = 0;
 	private Integer current = 0;
-	//private int barWidth = 40;
+	// private int barWidth = 40;
 	private long timeElapsed = 0;
 	private boolean showProgress = false;
 	private boolean labelChange = false;
-	
+
 	public ProgObsThread(ProgressObserver po, Object o, boolean showProgress) {
-		
-		obj = o;
-		progObs = po;
+
+		this.obj = o;
+		this.progObs = po;
 		this.showProgress = showProgress;
 	}
-	
+
+	@Override
 	public void run() {
-		
+
 		Framework.permitOutput();
-		
+
 		int clrLen = 0;
-		
+
 		long startTime = System.nanoTime();
 		long elapsed = 0;
-		
-		while (!progObs.getFinished(obj) && !progObs.timeout(obj)) {
-			
-			double percent = progObs.getProgress(obj)*100;
-			int places = (int) Math.ceil(Math.max(1, Math.log10(total)));
-			
-			elapsed = (System.nanoTime() - startTime);
-						
+
+		while (!this.progObs.getFinished(this.obj) && !this.progObs.timeout(this.obj)) {
+
+			double percent = this.progObs.getProgress(this.obj) * 100;
+			int places = (int) Math.ceil(Math.max(1, this.total.toString().length()));
+
+			elapsed = System.nanoTime() - startTime;
+
 			String formatPercent = "%7.3f";
-			String formatFile = (total == 0) ? "" : "FILE %" + places + "d of %" + places + "d";
+			String formatFile = this.total == 0 ? "" : "FILE %" + places + "d of %" + places + "d";
 
 			String printPercent = String.format(formatPercent, percent);
-			String printFile = String.format(formatFile, current, total);
+			String printFile = String.format(formatFile, this.current, this.total);
 			String printTime = TimeTools.nanoToHourMinSecMilli(elapsed);
-			
-			if (labelChange && showProgress) {
+
+			if (this.labelChange && this.showProgress) {
 				System.out.print("\r" + new String(new char[clrLen]).replace('\0', ' '));
-				labelChange = false;
+				this.labelChange = false;
 			}
-			String out = "\r" + preLabel + " [" + printPercent + " % ]  [" + printTime + "] " + printFile + " - " + endLabel;
-			
-			if (showProgress)	System.out.print(out);
-			
-			clrLen = out.length()+20;
-			
+			String out = "\r" + this.preLabel + " [" + printPercent + " % ]  [" + printTime + "] " + printFile + " - "
+					+ this.endLabel;
+
+			if (this.showProgress) {
+				System.out.print(out);
+			}
+
+			clrLen = out.length() + 20;
+
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		
+
 		// Clear line
-		if (showProgress)	System.out.print("\r" + new String(new char[clrLen]).replace('\0', ' '));
-		
-		timeElapsed = elapsed;
-		
+		if (this.showProgress) {
+			System.out.print("\r" + new String(new char[clrLen]).replace('\0', ' '));
+		}
+
+		this.timeElapsed = elapsed;
+
 		Framework.resetQuiet();
 	}
-	
+
 	public ProgressObserver getProgressObserver() {
-		return progObs;
+		return this.progObs;
 	}
-	
+
 	public long getTimeElapsedNano() {
-		return timeElapsed;
+		return this.timeElapsed;
 	}
-	
+
 	public void setEndLabel(String s) {
-		endLabel = s;
-		labelChange = true;
+		this.endLabel = s;
+		this.labelChange = true;
 	}
 
 	public void setPreLabel(String s) {
-		preLabel = s;
-		labelChange = true;
+		this.preLabel = s;
+		this.labelChange = true;
 	}
-	
+
 	public void setCurrent(int c) {
-		current = c;
+		this.current = c;
 	}
-	
+
 	public void setTotal(int t) {
-		total = t;
+		this.total = t;
 	}
-	
+
 	@SuppressWarnings("unused")
 	private static String bar(int prog, int max) {
-		
+
 		String bar = "[";
-		
-		for (int i=0; i<prog; i++) {
+
+		for (int i = 0; i < prog; i++) {
 			bar += "=";
 		}
 		if (prog != max) {
 			bar += ">";
 		}
-		for (int i=0; i<max-prog-1; i++) {
+		for (int i = 0; i < max - prog - 1; i++) {
 			bar += " ";
 		}
 
 		bar += "] ";
-		
+
 		return bar;
 	}
-	
+
+	@Override
 	public void start() {
-		startTimer(obj);
+		this.startTimer(this.obj);
 		super.start();
 	}
-	
+
 	public void startTimer(Object o) {
-		progObs.startTimer(o);
+		this.progObs.startTimer(o);
 	}
 }

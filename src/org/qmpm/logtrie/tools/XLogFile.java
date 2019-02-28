@@ -1,10 +1,10 @@
 /*
  * 	LogTrie - an efficient data structure and CLI for XES event logs and other sequential data
- * 
+ *
  * 	Author: Christoffer Olling Back	<www.christofferback.com>
- * 
- * 	Copyright (C) 2018 University of Copenhagen 
- * 
+ *
+ * 	Copyright (C) 2018 University of Copenhagen
+ *
  *	This file is part of LogTrie.
  *
  *	LogTrie is free software: you can redistribute it and/or modify
@@ -40,101 +40,105 @@ import org.qmpm.logtrie.exceptions.LabelTypeException;
 
 public class XLogFile implements FileInfo<XLog> {
 
-	private XFactory xFactory = new XFactoryBufferedImpl(); 
+	private XFactory xFactory = new XFactoryBufferedImpl();
 	private File file;
 	private String ID = "";
 	private XLog log = null;
 	private String path;
 	private boolean createFileOnDisk = false;
-	
+
 	public XLogFile(String filePath, boolean createFileOnDisk) {
-		
-		file = new File(filePath);
-		path = filePath;
+
+		this.file = new File(filePath);
+		this.path = filePath;
 		this.createFileOnDisk = createFileOnDisk;
 	}
 
+	@Override
 	public void append(FileInfo<XLog> fi2) {
-		
-		if (log == null) {
-			log = xFactory.createLog();
+
+		if (this.log == null) {
+			this.log = this.xFactory.createLog();
 		}
-		
+
 		XLog loadedFile = (XLog) fi2.getLoadedFile();
-		
+
 		for (XTrace trace : loadedFile) {
 
-			log.add(trace);
+			this.log.add(trace);
 		}
 	}
-	
+
+	@Override
 	public FileInfo<XLog> clone() {
-		
-		return clone("-clone", false);
+
+		return this.clone("-clone", false);
 	}
-	
+
 	public FileInfo<XLog> clone(boolean createFile) {
-		
-		return clone("-clone", createFile);
+
+		return this.clone("-clone", createFile);
 	}
 
 	public FileInfo<XLog> clone(String ext, boolean createFile) {
-		
-		XLogFile result = new XLogFile(path, createFile);
-		
-		result.file = new File(file.getAbsolutePath() + ext);
-		result.log = (XLog) log.clone();
+
+		XLogFile result = new XLogFile(this.path, createFile);
+
+		result.file = new File(this.file.getAbsolutePath() + ext);
+		result.log = (XLog) this.log.clone();
 
 		return result;
 	}
 
+	@Override
 	public void cutDownFile(int n, int m) {
-		
-		XLog newLog = (XLog) log.clone();
+
+		XLog newLog = (XLog) this.log.clone();
 		newLog.clear();
-		
+
 		for (int i = n; i < m; i++) {
-			newLog.add(log.get(i));
+			newLog.add(this.log.get(i));
 		}
-		log = newLog;
+		this.log = newLog;
 	}
-	
+
+	@Override
 	public boolean fileLoaded() {
-		return (log != null);
+		return this.log != null;
 	}
 
 	@Override
 	public File getFile() {
-		return file;
+		return this.file;
 	}
-	
+
 	@Override
 	public String getID() {
-		return ID;
+		return this.ID;
 	}
-	
+
 	@Override
 	public XLog getLoadedFile() {
 
-		if (log == null) {
-		
+		if (this.log == null) {
+
 			try {
-				log = XESTools.loadXES(path, true);
+				this.log = XESTools.loadXES(this.path, true);
 			} catch (FileLoadException e) {
-				
+
 				System.out.println("XLogFile()...file does not exist, creating new file");
-				
-				log = xFactory.createLog();
-				
-				if (createFileOnDisk) {
-				
-					file.getParentFile().mkdirs();
-					
+
+				this.log = this.xFactory.createLog();
+
+				if (this.createFileOnDisk) {
+
+					this.file.getParentFile().mkdirs();
+
 					try {
-						file.createNewFile();
+						this.file.createNewFile();
 					} catch (IOException e1) {
 						Framework.permitOutput();
-						System.out.println("Failed to create file: " + file.getAbsolutePath() + ". Aborting...");
+						System.out.println("Failed to create file: " + this.file.getAbsolutePath() + ". Aborting...");
 						e1.printStackTrace();
 						Framework.resetQuiet();
 						System.exit(1);
@@ -142,59 +146,77 @@ public class XLogFile implements FileInfo<XLog> {
 				}
 			}
 		}
-		
-		return log;
+
+		return this.log;
 	}
-	
+
 	@Override
 	public String getName() {
-		return file.getName() + getID();
+		return this.file.getName() + this.getID();
 	}
 
 	public String getPath() {
-		return path;
+		return this.path;
 	}
-	
-	
+
 	public void loadFile() {
-		
+
 		try {
-			log = XESTools.loadXES(path, true);
+			this.log = XESTools.loadXES(this.path, true);
 		} catch (FileLoadException e) {
 			e.printStackTrace();
 		}
 	}
 
+	@Override
 	public boolean rename(String newPath) {
 		System.out.println("Renaming file to " + newPath);
-		path = newPath;
-		return file.renameTo(new File(newPath));
+		this.path = newPath;
+		return this.file.renameTo(new File(newPath));
 	}
 
+	@Override
 	public void setID(String ID) {
 		this.ID = ID;
 	}
 
+	@Override
 	public void setLoadedFile(Collection<? extends List<?>> loadedFile) throws Exception {
-		
-		if (loadedFile instanceof XLog) {
-			log = (XLog) loadedFile;
-		} else throw new Exception("setLoadedFile: bad parameter type (" + loadedFile.getClass().toGenericString() + ")");
+
+		XLog newLog = this.xFactory.createLog();
+
+		for (List<?> trace : loadedFile) {
+			newLog.add((XTrace) trace);
+			/*
+			 * if (trace instanceof XTrace) { throw new Exception(
+			 * "setLoadedFile: bad parameter type (" +
+			 * loadedFile.getClass().toGenericString() + ")"); } else { newLog.add((XTrace)
+			 * trace); }
+			 */
+		}
+
+		this.log = newLog;
+		/*
+		 * if (loadedFile instanceof XLog) { this.log = (XLog) loadedFile; } else {
+		 * throw new Exception("setLoadedFile: bad parameter type (" +
+		 * loadedFile.getClass().toGenericString() + ")"); }
+		 */
 	}
 
 	@Override
 	public void saveAs(String newPath) throws FileNotFoundException, IOException {
 		System.out.println("Saving file as " + newPath);
-		rename(newPath);
-		XESTools.saveFile(log, file);
+		this.rename(newPath);
+		XESTools.saveFile(this.log, this.file);
 	}
-	
+
+	@Override
 	public String toString() {
-		
+
 		String out = "";
-		out += "name: " + getName() + "\n";
-		out += "path: " + path + "\n";
-		for (XTrace trace : log) {
+		out += "name: " + this.getName() + "\n";
+		out += "path: " + this.path + "\n";
+		for (XTrace trace : this.log) {
 			try {
 				out += XESTools.xTraceToString(trace) + "\n";
 			} catch (LabelTypeException e) {
@@ -207,22 +229,31 @@ public class XLogFile implements FileInfo<XLog> {
 
 	@Override
 	public void shuffle() {
-		
-		if (log != null) {
-			Collections.shuffle(log);
+
+		if (this.log != null) {
+			Collections.shuffle(this.log);
 		}
-		
+
 	}
 
 	@Override
 	public void sort() {
-		
-		XESTools.sortByTimeStamp(getLoadedFile());
+
+		XESTools.sortByTimeStamp(this.getLoadedFile());
 	}
 
 	@Override
 	public boolean isSorted() {
-		
-		return XESTools.isSorted(getLoadedFile());
+
+		return XESTools.isSorted(this.getLoadedFile());
+	}
+
+	public void setXLog(XLog log) {
+		this.log = log;
+	}
+
+	public XFactory getXFactory() {
+
+		return this.xFactory;
 	}
 }

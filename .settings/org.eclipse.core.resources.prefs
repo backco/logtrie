@@ -1,2 +1,6 @@
 eclipse.preferences.version=1
-encoding//src/org/qmpm/logtrie/trie/TrieImpl.java=UTF-8
+encoding//src/org/qmpm/qtrie/trie/QByteTrie.java=UTF-8
+encoding//src/org/qmpm/qtrie/trie/QIntTrie.java=UTF-8
+encoding//src/org/qmpm/qtrie/trie/QLongTrie.java=UTF-8
+encoding//src/org/qmpm/qtrie/trie/QShortTrie.java=UTF-8
+encoding//src/org/qmpm/qtrie/trie/QTrie.java=UTF-8
